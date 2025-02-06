@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Calender</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Roboto', serif;
+            background: linear-gradient(to bottom, #e3f2fd, #ffffff);
+            text-align: center;
+            color: #FFFFFF;
+            transition: opacity 0.5s ease; 
+        }
+
+        body.fade-out {
+            opacity: 0; 
+        }
+
+        .video-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .title h1, .text {
+            text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.7); 
+        }
+
+        .title {
+            color: #FF8C00; 
+            padding: 3px 10px;
+            font-style: italic;
+        }
+
+        .text {
+            color: #9d9595;
+            line-height: 1.5;
+            margin-bottom: 10px;
+            margin-top: 5px;
+        }
+
+        .important {
+            color: red;
+        }
+
+        .text-title {
+            color: #FF4500; 
+            font-weight: bold;
+            transition: transform 0.3s ease, color 0.3s ease;
+        }
+
+        .add_btn {
+            border-radius: 100px;
+            width: 200px;
+            padding: 15px;
+            box-sizing: border-box;
+            text-decoration: none;
+            text-align: center;
+            margin: 10px 0;
+            border: none;  
+            outline: none; 
+            cursor: pointer; 
+            box-shadow: 5px 5px #8f6f8878;
+            background-color: #FF5722;
+            color: #FFFFFF;
+            font-size: 1.2rem;
+        }
+
+        .add_btn:hover {
+            transform: scale(1.05);
+            background-color: #FF7043;
+        }
+
+        .add_btn a {
+            text-decoration: none;
+            color: #FFFFFF;
+            display: block;
+            height: 100%;
+            width: 100%;
+        }
+
+       
+    </style>
+</head>
+<body>
+    <video autoplay muted loop class="video-background">
+        <source src="24374_1280x720.mp4" type="video/mp4">
+        こちらの動画を再生できません。別のブラウザをお試しください。
+    </video>
+    
+    <div class="title">
+        <h1>ようこそ、Voice Calenderへ</h1>
+    </div>
+
+    <div class="about">
+        <p class="text">簡単に予定追加!</p>
+        <p class="text">このアプリは音声で予定を直接カレンダーに追加できるサイトです。</p><br>
+        <h2 class="text-title">☆やり方☆</h2>
+        <p class="text">①:「音声で予定を追加」ボタンを押す</p><br>
+        <p class="text">②：日付と予定を話す 例：「12日、バイト」</p><br>
+        <p class="text">その後、指定した日に予定がカレンダーに追加されます。</p><br>
+    </div>
+
+    <div class="btn">
+        <button class="add_btn"><a href="calender.html">早速試そう！</a></button>
+    </div>
+</body>
+</html>

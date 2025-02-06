@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>カレンダー追加</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', serif;
+            overflow: hidden;
+            background-color: black;
+        }
+
+        .video-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        
+        /* カレンダー */
+        #calendar {
+            width: 600px;
+            text-align: center;
+            margin: 0 auto;
+        }
+
+        #calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 30px;
+            width: 100%;
+        }
+
+        #monthYear {
+            flex-grow: 1;
+            text-align: center; /* 中央揃え */
+            font-size: 1.5rem;
+            color: #e6e6e6;
+        }
+
+        .voice {
+            padding: 8px;
+            background: #74a2f9a3;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 180px;
+            height: 50px;
+            margin-top: 4px;
+        }
+
+        .voice:hover {
+            background: #689af6f7;
+        }
+
+        #monthYear {
+            width: 100px;
+        }
+
+        /* 日付の部分 */
+        #calendar-body {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            padding: 10px;
+            opacity: 1;
+            transition: opacity 0.3s ease-in-out; /* フェードアニメーション */
+        }
+
+        #calendar-body.fade-out {
+            opacity: 0;
+        }
+
+        #calendar-body.fade-in {
+            opacity: 1;
+        }
+
+        .day {
+            padding: 33px;
+            height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+
+        .header-day {
+            font-weight: bold;
+            background-color: #e0e0e0;
+        }
+
+        .event {
+            background-color: #ffecb3;
+            padding: 5px;
+            margin-top: 5px;
+            font-size: 12px;
+            text-align: center;
+            border-radius: 5px;
+            width: 100%;
+        }
+
+        /* ボタン */
+        .before, .next {
+            font-size: 34px;
+            border-radius: 100px;
+            width: 100px;
+            /* padding: 15px; */
+            box-sizing: border-box;
+            background: #74a2f9a3;
+            text-decoration: none;
+            text-align: center;
+            margin: 10px 0;
+            border: none;  
+            outline: none; 
+            cursor: pointer; 
+            box-shadow: 5px 5px #8f6f8878;
+        }
+
+        .before:hover, .next:hover {
+            background: #689af6f7;
+            box-shadow: 0px 0px #8f6f8878;
+        }
+
+        .container {
+            display: flex;
+            gap: 20px;
+            width: 1200px;
+        }
+
+        .list {
+            width: 300px; 
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 5px 5px 10px #68859b78;
+            height: 200px;
+            margin-top: 40px;
+        }
+
+        .list-item {
+            margin-bottom: 10px;
+            font-size: 14px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <video autoplay muted loop class="video-background">
+        <source src="57029_1280x720.mp4" type="video/mp4">
+        こちらの動画を再生できません。別のブラウザをお試しください。
+    </video>
+
+    <div class="container">
+        <div id="calendar">
+            <div id="calendar-header">
+                <button class="before" onclick="changeMonth(-1)">☜</button>
+                <h2 id="monthYear"></h2>
+                <button class="next" onclick="changeMonth(1)">☞</button>
+                <button class="voice" onclick="startVoiceRecognition()">音声で予定を追加</button>
+            </div>
+            <div id="calendar-body"></div>
+        </div>
+    
+        <div class="list" id="eventList">予定一覧<br>
+            <li class="schedule-item">12日 - バイト</li><br>
+            <li class="schedule-item">15日 - ミーティング</li>
+        </div>
+    </div>
+
+    <script>
+        const monthNames = ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"];
+        const weekDays = ["日", "月", "火", "水", "木", "金", "土"];  // 曜日の配列
+        let currentDate = new Date();
+        let events = {};
+
+        function getDateKey(year, month, day, time = "") {
+            return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}${time ? ` ${time}` : ""}`;
+        }
+
+        function updateCalendar() {
+            const monthYear = document.getElementById("monthYear");
+            monthYear.textContent = `${currentDate.getFullYear()}年 ${monthNames[currentDate.getMonth()]}`;
+
+            const calendarBody = document.getElementById("calendar-body");
+            calendarBody.innerHTML = "";
+
+            const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
+            const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+
+            // 曜日の表示（ヘッダー）
+            for (let i = 0; i < 7; i++) {
+                const headerDay = document.createElement("div");
+                headerDay.classList.add("header-day");
+                headerDay.textContent = weekDays[i];
+                calendarBody.appendChild(headerDay);
+            }
+
+            // 月初日の前に空白を追加
+            for (let i = 0; i < firstDay; i++) {
+                calendarBody.appendChild(document.createElement("div"));
+            }
+
+            // 各日付を表示
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayCell = document.createElement("div");
+                dayCell.classList.add("day");
+                dayCell.textContent = day;
+
+                const dateKey = getDateKey(currentDate.getFullYear(), currentDate.getMonth(), day);
+                for (let key in events) {
+                    if (key.startsWith(dateKey)) {
+                        const eventDiv = document.createElement("div");
+                        eventDiv.classList.add("event");
+                        eventDiv.textContent = events[key];
+                        dayCell.appendChild(eventDiv);
+                    }
+                }
+
+                const dayOfWeek = new Date(currentDate.getFullYear(), currentDate.getMonth(), day).getDay();
+                if (dayOfWeek === 6 || dayOfWeek === 0) { // 土曜日 (6) または 日曜日 (0)
+                    dayCell.style.color = "red";  // 数字を赤くする
+                }
+
+                calendarBody.appendChild(dayCell);
+            }
+        }
+
+        function changeMonth(delta) {
+            const calendarBody = document.getElementById("calendar-body");
+            calendarBody.classList.add("fade-out");
+
+            setTimeout(() => {
+                currentDate.setMonth(currentDate.getMonth() + delta);
+                updateCalendar();
+                calendarBody.classList.remove("fade-out");
+                calendarBody.classList.add("fade-in");
+
+                setTimeout(() => {
+                    calendarBody.classList.remove("fade-in");
+                }, 300); // フェードインが終わるタイミング
+            }, 300); // フェードアウトのアニメーション時間
+        }
+
+        function startVoiceRecognition() {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = "ja-JP";
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+
+                if (transcript.includes("追加")) {
+                    const match = transcript.match(/(\d+)月(\d+)日.*?(\d{1,2})時.*?(.*)(を追加|追加して)/);
+                    if (match) {
+                        const month = parseInt(match[1], 10) - 1;
+                        const day = parseInt(match[2], 10);
+                        const hour = String(parseInt(match[3], 10)).padStart(2, "0") + ":00";
+                        const eventText = match[4];
+                        const dateKey = getDateKey(currentDate.getFullYear(), month, day, hour);
+
+                        events[dateKey] = eventText;
+                        updateCalendar();
+                        alert(`${match[1]}月${match[2]}日 ${hour} に「${eventText}」を追加しました。`);
+                    }
+                } else if (transcript.includes("削除")) {
+                    const match = transcript.match(/(\d+)月(\d+)日.*(\d{1,2})時/);
+                    if (match) {
+                        const month = parseInt(match[1], 10) - 1;
+                        const day = parseInt(match[2], 10);
+                        const hour = String(parseInt(match[3], 10)).padStart(2, "0") + ":00";
+                        const dateKey = getDateKey(currentDate.getFullYear(), month, day, hour);
+
+                        if (events[dateKey]) {
+                            delete events[dateKey];
+                            updateCalendar();
+                            alert(`${match[1]}月${match[2]}日 ${hour} の予定を削除しました。`);
+                        }
+                    }
+                }
+            };
+
+            recognition.start();
+        }
+
+        window.onload = updateCalendar;
+    </script>
+</body>
+</html>
