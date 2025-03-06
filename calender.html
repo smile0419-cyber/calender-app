@@ -12,6 +12,7 @@
             font-family: 'Roboto', serif;
             overflow: hidden;
             background-color: black;
+            /* background-image: url("hora-tegata2.jpg"); */
         }
 
         .video-background {
@@ -159,7 +160,7 @@
     <video autoplay muted loop class="video-background">
         <source src="./movie/57029_1280x720.mp4" type="video/mp4">
         こちらの動画を再生できません。別のブラウザをお試しください。
-    </video>
+    </video> 
 
     <div class="container">
         <div id="calendar">
@@ -167,7 +168,7 @@
                 <button class="before" onclick="changeMonth(-1)">☜</button>
                 <h2 id="monthYear"></h2>
                 <button class="next" onclick="changeMonth(1)">☞</button>
-                <button class="voice" onclick="startVoiceRecognition()">音声で予定を追加</button>
+                <button class="voice" onclick="startVoiceRecognition()">音声で予定管理</button>
             </div>
             <div id="calendar-body"></div>
         </div>
@@ -202,6 +203,7 @@
         }
     }
 
+    
     function updateCalendar() {
         const monthYear = document.getElementById("monthYear");
         monthYear.textContent = `${currentDate.getFullYear()}年 ${monthNames[currentDate.getMonth()]}`;
@@ -259,50 +261,53 @@
         updateCalendar();
     }
 
+   
+
+
     function startVoiceRecognition() {
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = "ja-JP";
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = "ja-JP";
 
-        recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript;
-            console.log("認識されたテキスト:", transcript);
+    recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        console.log("認識されたテキスト:", transcript);
 
-            if (transcript.includes("追加")) {
-                const match = transcript.match(/(\d+)月(\d+)日.*?(\d{1,2})時.*?(.*)を追加/);
-                if (match) {
-                    const month = parseInt(match[1], 10) - 1;
-                    const day = parseInt(match[2], 10);
-                    const hour = String(parseInt(match[3], 10)).padStart(2, "0") + ":00";
-                    const eventText = match[4];
-                    const dateKey = getDateKey(currentDate.getFullYear(), month, day, hour);
+        if (transcript.includes("追加")) {
+            const match = transcript.match(/(\d+)月(\d+)日.*?(\d{1,2})時.*?(.*)を追加/);
+            if (match) {
+                const month = parseInt(match[1], 10) - 1;
+                const day = parseInt(match[2], 10);
+                const hour = String(parseInt(match[3], 10)).padStart(2, "0") + ":00";
+                const eventText = match[4];
+                const dateKey = getDateKey(currentDate.getFullYear(), month, day, hour);
 
-                    events[dateKey] = eventText;
+                events[dateKey] = eventText;
+                updateCalendar();
+                updateEventList();
+                alert(`${match[1]}月${match[2]}日 ${hour} に「${eventText}」を追加しました。`);
+                console.log("追加成功");
+            }
+        } else if (transcript.includes("削除")) {
+            const match = transcript.match(/(\d+)月(\d+)日.*?(\d{1,2})時.*?(.*)を削除/);
+            if (match) {
+                const month = parseInt(match[1], 10) - 1;
+                const day = parseInt(match[2], 10);
+                const hour = String(parseInt(match[3], 10)).padStart(2, "0") + ":00";
+                const dateKey = getDateKey(currentDate.getFullYear(), month, day, hour);
+
+                if (events[dateKey]) {
+                    delete events[dateKey];
                     updateCalendar();
                     updateEventList();
-                    alert(`${match[1]}月${match[2]}日 ${hour} に「${eventText}」を追加しました。`);
-                    console.log("追加成功");
-                }
-            } else if (transcript.includes("削除")) {
-                const match = transcript.match(/(\d+)月(\d+)日.*?(\d{1,2})時/);
-                if (match) {
-                    const month = parseInt(match[1], 10) - 1;
-                    const day = parseInt(match[2], 10);
-                    const hour = String(parseInt(match[3], 10)).padStart(2, "0") + ":00";
-                    const dateKey = getDateKey(currentDate.getFullYear(), month, day, hour);
-
-                    if (events[dateKey]) {
-                        delete events[dateKey];
-                        updateCalendar();
-                        updateEventList();
-                        alert(`${match[1]}月${match[2]}日 ${hour} の予定を削除しました。`);
-                        console.log("削除成功");
-                    }
+                    alert(`${match[1]}月${match[2]}日 ${hour} の予定を削除しました。`);
+                    console.log("削除成功");
                 }
             }
-        };
+        } 
+    };
 
-        recognition.start();
-    }
+    recognition.start();
+}
 
     window.onload = () => {
         updateCalendar();
